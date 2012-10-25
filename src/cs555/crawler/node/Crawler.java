@@ -76,24 +76,7 @@ public class Crawler extends Node {
 
 		switch (messageType) {
 		case Constants.lookup_reply:
-
-			LookupResponse response = new LookupResponse();
-			response.unmarshall(bytes);
-			System.out.println("Data belongs to: " + response.id);
 			
-			Peer candidate = new Peer(response.hostName, response.port);
-			Link candidateLink = connect(candidate);
-			
-			
-			// Send store request
-			TransferRequest storeReq = new TransferRequest(filename, filehash);
-			candidateLink.sendData(storeReq.marshall());
-			System.out.println("Requesting : " + storeReq);
-			
-			if (candidateLink.waitForIntReply() == Constants.Continue) {
-				// Send data item to candidate
-				Tools.sendFile(filename, candidateLink.socket);
-			}
 			
 			break;
 
@@ -115,7 +98,6 @@ public class Crawler extends Node {
 		int localPort = 0;
 		String fileName = "";
 		int fileHash = -1;
-		int idSpace = 16;
 
 		if (args.length >= 4) {
 			discoveryHost = args[0];
@@ -126,9 +108,7 @@ public class Crawler extends Node {
 			if (args.length >= 5) {
 				fileHash = Integer.parseInt(args[4]);
 
-				if (args.length >= 6) {
-					idSpace = Integer.parseInt(args[5]);
-				}
+				
 			}
 
 		}
@@ -140,7 +120,7 @@ public class Crawler extends Node {
 
 
 		// Create node
-		StoreData storeHandler = new StoreData(localPort, fileName, fileHash, idSpace);
+		StoreData storeHandler = new StoreData(localPort, fileName, fileHash, Constants.Id_Space);
 
 		// Start
 		storeHandler.initServer();

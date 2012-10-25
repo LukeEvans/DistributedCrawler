@@ -22,9 +22,16 @@ public class Constants {
 	public static final int Predessesor_Leaving = 16;
 	public static final int RandomPeer_Requst = 17;
 	public static final int RandomPeer_Response = 18;
+	public static final int Domain_Request = 19;
+	public static final int URL_Request = 20;
+	public static final int URL_Response = 21;
+	public static final int DHT_Scan = 22;
 	
 	// Flags
 	public static final int Undefined = -1;
+	public static final int URL_Pending = 94;
+	public static final int URL_Complete = 95;
+	public static final int URL_Ready = 96;
 	public static final int Store_Lookup = 97;
 	public static final int Continue = 98;
 	public static final int Failure = 99;
