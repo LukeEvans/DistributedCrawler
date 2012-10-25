@@ -26,6 +26,8 @@ public class Constants {
 	public static final int URL_Request = 20;
 	public static final int URL_Response = 21;
 	public static final int DHT_Scan = 22;
+	public static final int Seed_Node = 23;
+	public static final int Domain_Response = 24;
 	
 	// Flags
 	public static final int Undefined = -1;

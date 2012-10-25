@@ -9,19 +9,7 @@ import cs555.crawler.peer.Peer;
 import cs555.crawler.state.RefreshThread;
 import cs555.crawler.state.State;
 import cs555.crawler.utilities.*;
-import cs555.crawler.wireformats.DeregisterRequest;
-import cs555.crawler.wireformats.LookupRequest;
-import cs555.crawler.wireformats.LookupResponse;
-import cs555.crawler.wireformats.Payload;
-import cs555.crawler.wireformats.PredessesorLeaving;
-import cs555.crawler.wireformats.PredessesorRequest;
-import cs555.crawler.wireformats.PredessesorResponse;
-import cs555.crawler.wireformats.RegisterRequest;
-import cs555.crawler.wireformats.RegisterResponse;
-import cs555.crawler.wireformats.SuccessorLeaving;
-import cs555.crawler.wireformats.SuccessorRequest;
-import cs555.crawler.wireformats.TransferRequest;
-import cs555.crawler.wireformats.Verification;
+import cs555.crawler.wireformats.*;
 
 public class PeerNode extends Node{
 

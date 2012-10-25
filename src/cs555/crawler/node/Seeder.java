@@ -2,29 +2,24 @@ package cs555.crawler.node;
 
 import cs555.crawler.communications.Link;
 import cs555.crawler.peer.Peer;
+import cs555.crawler.url.CrawlerState;
+import cs555.crawler.url.Page;
 import cs555.crawler.utilities.Constants;
 import cs555.crawler.utilities.Tools;
 import cs555.crawler.wireformats.*;
 
-public class Crawler extends Node {
+public class Seeder extends Node {
 
 	String hostName;
+	CrawlerState crawlState;
 	int port;
-	String filename;
-	int filehash;
-	int idSpace;
 
-	public Crawler(int p, String fname, int fhash, int s) {
+	public Seeder(int p, String fname, int fhash, CrawlerState c) {
 		super(p);
 		hostName = Tools.getLocalHostname();
 		port = p;
-		filename = fname;
-		filehash = fhash;
-		idSpace = s;
+		crawlState = c;
 
-		if (filehash == -1) {
-			filehash = Tools.generateHash(filename);
-		}
 	}
 
 	//================================================================================
@@ -38,7 +33,7 @@ public class Crawler extends Node {
 		Link managerLink = connect(new Peer(dHost, dPort));
 		
 		// Get random peer from discovery
-		RandomPeerRequest randomReq = new RandomPeerRequest(hostName, port, filehash);
+		RandomPeerRequest randomReq = new RandomPeerRequest(hostName, port, Constants.Seed_Node);
 		managerLink.sendData(randomReq.marshall());
 		
 		byte[] randomNodeData = managerLink.waitForData();
@@ -46,19 +41,17 @@ public class Crawler extends Node {
 		
 		switch (msgType) {
 		case Constants.RandomPeer_Response:
-			
+			// We've gotten our random node
 			RandomPeerResponse randomRes = new RandomPeerResponse();
 			randomRes.unmarshall(randomNodeData);
 			
-			LookupRequest lookupReq = new LookupRequest(hostName, port, filehash, filehash, Constants.store_request);
 			Peer accessPoint = new Peer(randomRes.hostName, randomRes.port, randomRes.id);
 			Link accessLink = connect(accessPoint);
 			
-			System.out.println("access point : " + accessPoint.id);
-			
-			accessLink.sendData(lookupReq.marshall());
-			
-			System.out.println("Looking up hash : " + lookupReq.resolveID);
+			// Publish each seed publish domain
+			for (Page p : crawlState.getAllReadyLinks()) {
+				accessLink.sendData(p.getDomainRequest(hostName, port).marshall());
+			}
 			
 			break;
 
@@ -97,30 +90,29 @@ public class Crawler extends Node {
 		int discoveryPort = 0;
 		int localPort = 0;
 		String fileName = "";
-		int fileHash = -1;
+		int depth = Constants.Crawl_Depth;
 
 		if (args.length >= 4) {
 			discoveryHost = args[0];
 			discoveryPort = Integer.parseInt(args[1]);
 			localPort = Integer.parseInt(args[2]);
 			fileName = args[3];
-
+			
 			if (args.length >= 5) {
-				fileHash = Integer.parseInt(args[4]);
-
-				
+				depth = Integer.parseInt(args[4]);
 			}
-
 		}
 
 		else {
-			System.out.println("Usage: java cs555.dht.node.StoreData DISCOVERY-NODE DISCOVERY-PORT LOCAL-PORT FILE-NAME <CUSTOM-HASH>");
+			System.out.println("Usage: java cs555.crawler.node.Seeder DISCOVERY-NODE DISCOVERY-PORT LOCAL-PORT FILE-NAME <CRAWL_DEPTH>");
 			System.exit(1);
 		}
 
-
+		// Create crawl state
+		CrawlerState seeds = new CrawlerState(fileName, depth);
+		
 		// Create node
-		StoreData storeHandler = new StoreData(localPort, fileName, fileHash, Constants.Id_Space);
+		Seeder storeHandler = new Seeder(localPort, fileName, Constants.Undefined, seeds);
 
 		// Start
 		storeHandler.initServer();

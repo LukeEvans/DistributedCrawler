@@ -2,6 +2,7 @@ package cs555.crawler.url;
 
 import java.util.ArrayList;
 
+import cs555.crawler.wireformatsURL.*;
 import cs555.crawler.utilities.*;
 
 public class Page {
@@ -10,6 +11,7 @@ public class Page {
 	public String urlString;
 	public int depth;
 	public String domain;
+	public int urlHash;
 	ArrayList<Page> links;
 	
 	//================================================================================
@@ -21,6 +23,7 @@ public class Page {
 		status = Constants.URL_Ready;
 		depth = 0;
 		links = new ArrayList<Page>();
+		urlHash = Tools.generateHash(urlString);
 	}
 	
 	public Page(String url, int dep, String d){
@@ -29,6 +32,7 @@ public class Page {
 		status = Constants.URL_Ready;
 		depth = dep;
 		links = new ArrayList<Page>();
+		urlHash = Tools.generateHash(urlString);
 	}
 	
 	//================================================================================
@@ -43,6 +47,18 @@ public class Page {
 		
 		return stringLinks;
 	}
+	
+	//================================================================================
+	// Get requests for page
+	//================================================================================
+	public DomainRequest getDomainRequest(String host, int port) {
+		return new DomainRequest(host, port, Constants.Seed_Node, urlHash, domain, urlString);
+	}
+	
+	public URLRequest getUrlRequest(String host, int port, int id) {
+		return new URLRequest(host, port, id, urlHash, domain, urlString);
+	}
+	
 	//================================================================================
 	// House Keeping
 	//================================================================================

@@ -77,6 +77,11 @@ public class CrawlerState {
 		return null;
 	}
 	
+	// Get all ready links
+	public ArrayList<Page> getAllReadyLinks() {
+		return getNextReadySet(readyStack.size());
+	}
+	
 	// Get multiple pages
 	public ArrayList<Page> getNextReadySet(int n){
 		ArrayList<Page> readySet= new ArrayList<Page>();
