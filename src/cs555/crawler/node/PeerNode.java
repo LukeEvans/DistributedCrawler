@@ -388,7 +388,17 @@ public class PeerNode extends Node{
 		case Constants.URL_Request:
 			URLRequest urlReq = new URLRequest();
 			urlReq.unmarshall(bytes);
-			crawelr.incomingUrlRequest(urlReq);
+			
+			// If the link to fetch is our, send it to the crawler
+			if (state.itemIsMine(urlReq.resolveID)) {
+				crawelr.incomingUrlRequest(urlReq);
+			}
+			
+			// 
+			else {
+				
+			}
+			
 			break;
 
 		case Constants.Domain_Request:

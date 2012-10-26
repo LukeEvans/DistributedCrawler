@@ -51,6 +51,7 @@ public class Crawler {
 		
 	}
 	
+	// URL response
 	public synchronized void incomingUrlResponse(URLResponse response) {
 		
 	}
