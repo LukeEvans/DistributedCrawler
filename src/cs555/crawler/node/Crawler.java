@@ -10,7 +10,6 @@ import cs555.crawler.wireformatsURL.URLResponse;
 
 public class Crawler {
 
-
 	PeerNode peer;
 	int depth;
 	CrawlerState crawlState;
@@ -43,12 +42,13 @@ public class Crawler {
 	// Link to parse
 	public synchronized void incomingUrlRequest(URLRequest request) {
 		// fetch url
+		System.out.println("Fetching : " + request.url);
 		
 	}
 
 	// Domain we own
 	public synchronized void incomingDomainRequest(DomainRequest request) {
-		
+		System.out.println("Received domain request : " + request.domain);
 	}
 	
 	// URL response

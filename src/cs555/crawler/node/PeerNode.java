@@ -59,7 +59,9 @@ public class PeerNode extends Node{
 
 		refreshThread = new RefreshThread(this, refreshTime);
 
-		dataList = new DataList();		
+		dataList = new DataList();	
+		
+		crawelr = c;
 
 	}
 
@@ -394,17 +396,42 @@ public class PeerNode extends Node{
 				crawelr.incomingUrlRequest(urlReq);
 			}
 			
-			// 
+			// Else forward it
 			else {
+				Peer peer = state.getNexClosestPeer(urlReq.resolveID);
+				Link peerLink = connect(peer);
 				
+				if (peer == null) {
+					state.update();
+					return;
+				}
+
+				urlReq.hopCount++;
+				System.out.println("Routing url request  " + urlReq);
+				peerLink.sendData(urlReq.marshall());
 			}
 			
 			break;
 
 		case Constants.Domain_Request:
-			DomainRequest domReq = new DomainRequest();
-			domReq.unmarshall(bytes);
-			crawelr.incomingDomainRequest(domReq);
+			DomainRequest domainReq = new DomainRequest();
+			domainReq.unmarshall(bytes);
+			
+			// If we own this domain, pass it to the crawler
+			if (state.itemIsMine(domainReq.resolveID)) {
+				crawelr.incomingDomainRequest(domainReq);
+			}
+			
+			// Else, forward it
+			else {
+				Peer peer = state.getNexClosestPeer(domainReq.resolveID);
+				Link peerLink = connect(peer);
+				
+				domainReq.hopCount++;
+				System.out.println("Routing domain request : " + domainReq);
+				peerLink.sendData(domainReq.marshall());
+			}
+
 			break;
 			
 			

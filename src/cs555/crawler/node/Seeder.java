@@ -7,6 +7,7 @@ import cs555.crawler.url.Page;
 import cs555.crawler.utilities.Constants;
 import cs555.crawler.utilities.Tools;
 import cs555.crawler.wireformats.*;
+import cs555.crawler.wireformatsURL.DomainRequest;
 
 public class Seeder extends Node {
 
@@ -50,7 +51,10 @@ public class Seeder extends Node {
 			
 			// Publish each seed publish domain
 			for (Page p : crawlState.getAllReadyLinks()) {
-				accessLink.sendData(p.getDomainRequest(hostName, port).marshall());
+				DomainRequest domainReq = p.getDomainRequest(hostName, port);
+				System.out.println("Link resolves to : " + domainReq.resolveID);
+				
+				accessLink.sendData(domainReq.marshall());
 			}
 			
 			break;

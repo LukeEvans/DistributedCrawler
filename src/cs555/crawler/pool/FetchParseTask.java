@@ -2,7 +2,7 @@ package cs555.crawler.pool;
 
 import org.htmlparser.beans.*;
 
-import cs555.crawler.communications.Link;
+import cs555.crawler.communications.*;
 
 public class FetchParseTask implements Task {
 
