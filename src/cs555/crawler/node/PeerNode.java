@@ -10,6 +10,7 @@ import cs555.crawler.state.RefreshThread;
 import cs555.crawler.state.State;
 import cs555.crawler.utilities.*;
 import cs555.crawler.wireformats.*;
+import cs555.crawler.wireformatsURL.DomainRequest;
 
 public class PeerNode extends Node{
 
@@ -349,6 +350,23 @@ public class PeerNode extends Node{
 			
 			else {
 				System.out.println("Could not read : " + storeReq.path);
+			}
+			
+			break;
+			
+		case Constants.Domain_Request:
+			
+			DomainRequest domainReq = new DomainRequest();
+			domainReq.unmarshall(bytes);
+			
+			// If I own this domain, I am the domain leader
+			if (state.itemIsMine(domainReq.resolveID)) {
+				
+			}
+			
+			// Else, pass it to someone else
+			else {
+				
 			}
 			
 			break;
