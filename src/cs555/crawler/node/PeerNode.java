@@ -11,6 +11,7 @@ import cs555.crawler.state.State;
 import cs555.crawler.utilities.*;
 import cs555.crawler.wireformats.*;
 import cs555.crawler.wireformatsURL.DomainRequest;
+import cs555.crawler.wireformatsURL.URLRequest;
 
 public class PeerNode extends Node{
 
@@ -25,15 +26,25 @@ public class PeerNode extends Node{
 
 	State state;
 	DataList dataList;
-	
+
 	RefreshThread refreshThread;
 
+	Crawler crawelr;
+
 	//================================================================================
-	// Constructor
+	// Constructors
 	//================================================================================
 	public PeerNode(int p, int i, int r){
 		super(p);
+		init(p, i, r, null);
+	}
 
+	public PeerNode(int p, int i, int r, Crawler c) {
+		super(p);
+		init(p, i, r, c);
+	}
+
+	public void init(int p, int i, int r, Crawler c) {
 		port = p;
 		id = i;
 		refreshTime = r;
@@ -47,8 +58,9 @@ public class PeerNode extends Node{
 		hostname = Tools.getLocalHostname();
 
 		refreshThread = new RefreshThread(this, refreshTime);
-		
-		dataList = new DataList();
+
+		dataList = new DataList();		
+
 	}
 
 	//================================================================================
@@ -117,7 +129,7 @@ public class PeerNode extends Node{
 		}	
 
 	}
-	
+
 	//================================================================================
 	// Exit CDN
 	//================================================================================
@@ -126,25 +138,25 @@ public class PeerNode extends Node{
 		if (managerLink == null) {
 			return;
 		}
-		
+
 		DeregisterRequest dreq = new DeregisterRequest(hostname, port, id);
 		managerLink.sendData(dreq.marshall());
-		
+
 		// Tell our successor we're leaving
 		PredessesorLeaving predLeaving = new PredessesorLeaving(state.predecessor.hostname, state.predecessor.port, state.predecessor.id);
 		Link successorLink = connect(state.successor);
 		successorLink.sendData(predLeaving.marshall());
-		
+
 		// Tell our predessor we're leaving
 		SuccessorLeaving sucLeaving = new SuccessorLeaving(state.successor.hostname, state.successor.port, state.successor.id);
 		Link predLink = connect(state.predecessor);
 		predLink.sendData(sucLeaving.marshall());
-		
+
 		// Pass all data to our successor
 		for (DataItem d : dataList.getAllData()) {
 			transferData(d, state.successor);
 		}
-		
+
 		// Remove all items from file system
 		ArrayList<DataItem> filesToRemove = new ArrayList<DataItem>(dataList.getAllData());
 		for (DataItem d : filesToRemove) {
@@ -162,19 +174,19 @@ public class PeerNode extends Node{
 
 	public void transferDataToPredesessor() {
 		ArrayList<DataItem> subset = new ArrayList<DataItem>(dataList.subsetToMove(state.predecessor.id));
-		
+
 		// Move all data our predessor should be in charge of
 		for (DataItem d : subset) {
 			transferData(d, state.predecessor);
 		}
-		
+
 		// Remove these items from preddessesor
 		for (DataItem d : subset) {
 			dataList.removeData(d);
 		}
-		
+
 	}
-	
+
 	//================================================================================
 	// Send
 	//================================================================================
@@ -189,29 +201,48 @@ public class PeerNode extends Node{
 		sucessorLink.sendData(r.marshall());
 	}
 
+	// Publish link into system
+	public void publishLink(String domain, String url, int depth) {
+		int urlHash = Tools.generateHash(url);
+		URLRequest req = new URLRequest(hostname, port, id, urlHash, domain, url);
+
+		// If we're already at the node, send it back to the crawler to crawl
+		if (state.itemIsMine(urlHash)) {
+			crawelr.incomingUrlRequest(req);
+		}
+
+		// Else, actually put it into the DHT
+		else {
+			Peer peer = state.getNexClosestPeer(urlHash);
+			Link peerLink = connect(peer);
+
+			peerLink.sendData(req.marshall());
+		}
+	}
+
 	//================================================================================
 	// Transfer data
 	//================================================================================
 	public void transferData(DataItem d, Peer p) {
-		
+
 		Link link = connect(p);
-		
+
 		if (link == null){
 			link = connect(state.getNextSuccessor());
-			
+
 		}
-		
+
 		// Send store request
 		TransferRequest storeReq = new TransferRequest(d.filename, d.filehash);
 		link.sendData(storeReq.marshall());
 
-	
+
 		if (link.waitForIntReply() == Constants.Continue) {
 			// Send data item to candidate
 			Tools.sendFile(d.filename, link.socket);
 		}
 	}
-	
+
 	//================================================================================
 	// Receive
 	//================================================================================
@@ -234,7 +265,7 @@ public class PeerNode extends Node{
 
 			// If we are the target, handle it
 			if (state.itemIsMine(resolveID)) {
-				
+
 				LookupResponse response = new LookupResponse(hostname, port, id, resolveID, entry);
 				Peer requester = new Peer(requesterHost, requesterPort, requesterID);
 				Link requesterLink = connect(requester);
@@ -248,12 +279,12 @@ public class PeerNode extends Node{
 				//System.out.println("is not mine : " + resolveID);
 				Peer nextPeer = state.getNexClosestPeer(resolveID);
 				Link nextHop = connect(nextPeer);
-				
+
 				if (nextHop == null) {
 					state.update();
 					return;
 				}
-				
+
 				lookup.hopCount++;
 				System.out.println("Routing query from " + lookup);
 				nextHop.sendData(lookup.marshall());
@@ -314,62 +345,58 @@ public class PeerNode extends Node{
 		case Constants.Predessesor_Leaving:
 			PredessesorLeaving predLeaving = new PredessesorLeaving();
 			predLeaving.unmarshall(bytes);
-			
+
 			Peer newPred = new Peer(predLeaving.hostName, predLeaving.port, predLeaving.id);
 			state.addPredecessor(newPred,true);
-			
+
 			break;
-			
+
 		case Constants.Successor_Leaving:
 			SuccessorLeaving sucLeaving = new SuccessorLeaving();
 			sucLeaving.unmarshall(bytes);
-			
+
 			Peer newSuc = new Peer(sucLeaving.hostName, sucLeaving.port, sucLeaving.id);
 			state.addSucessor(newSuc, true);
-			
+
 			break;
-			
+
 		case Constants.store_request:
 			TransferRequest storeReq = new TransferRequest();
 			storeReq.unmarshall(bytes);
-						
+
 			System.out.println("Recieved store request");
-			
+
 			Verification cont = new Verification(Constants.Continue);
 			l.sendData(cont.marshall());
-						
+
 			// If we receive file, add it to our data list
 			if (Tools.receiveFile(storeReq.path, l.socket)) {
 				System.out.println("Receieved file: " + storeReq.path);
-				
+
 				DataItem data = new DataItem(storeReq.path, storeReq.filehash);
 				dataList.addData(data);
-				
+
 				printDiagnostics();
 			}
-			
+
 			else {
 				System.out.println("Could not read : " + storeReq.path);
 			}
-			
+
 			break;
 			
+		case Constants.URL_Request:
+			URLRequest urlReq = new URLRequest();
+			urlReq.unmarshall(bytes);
+			crawelr.incomingUrlRequest(urlReq);
+			break;
+
 		case Constants.Domain_Request:
-			
-			DomainRequest domainReq = new DomainRequest();
-			domainReq.unmarshall(bytes);
-			
-			// If I own this domain, I am the domain leader
-			if (state.itemIsMine(domainReq.resolveID)) {
-				
-			}
-			
-			// Else, pass it to someone else
-			else {
-				
-			}
-			
+			DomainRequest domReq = new DomainRequest();
+			domReq.unmarshall(bytes);
+			crawelr.incomingDomainRequest(domReq);
 			break;
+			
 			
 		default:
 			System.out.println("Unrecognized Message : " + messageType);
@@ -387,7 +414,7 @@ public class PeerNode extends Node{
 		System.out.println(dataList);
 		System.out.println("================================================================================\n");
 	}
-	
+
 	//================================================================================
 	//================================================================================
 	// Main
@@ -437,7 +464,7 @@ public class PeerNode extends Node{
 				peer.leaveDHT();
 				cont = false;
 				System.exit(0);
-				
+
 			}
 		}
 	}

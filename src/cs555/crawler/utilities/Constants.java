@@ -56,4 +56,7 @@ public class Constants {
 	
 	// Default Thread pool size
 	public static final int Threads = 3;
+	
+	// Refresh time
+	public static final int Refresh_Time = 30;
 }
