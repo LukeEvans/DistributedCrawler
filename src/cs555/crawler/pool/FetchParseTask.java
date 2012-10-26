@@ -1,6 +1,6 @@
 package cs555.crawler.pool;
 
-import org.htmlparser.beans.*;
+//import org.htmlparser.beans.*;
 
 import cs555.crawler.communications.*;
 
@@ -10,8 +10,8 @@ public class FetchParseTask implements Task {
 	int runningThread;
 	
 	// Fetchers
-	HTMLTextBean textFetcher;
-	HTMLLinkBean linkfetcher;
+//	HTMLTextBean textFetcher;
+//	HTMLLinkBean linkfetcher;
 	
 	// URL
 	String urlString;
@@ -26,12 +26,12 @@ public class FetchParseTask implements Task {
 	//================================================================================
 	public FetchParseTask(Link l, String url){
 		link = l;
-		textFetcher = new HTMLTextBean();
-		linkfetcher = new HTMLLinkBean();
+//		textFetcher = new HTMLTextBean();
+//		linkfetcher = new HTMLLinkBean();
 		urlString = url;
 		
-		textFetcher.setURL(url);
-		linkfetcher.setURL(url);
+//		textFetcher.setURL(url);
+//		linkfetcher.setURL(url);
 	}
 	
 	//================================================================================
