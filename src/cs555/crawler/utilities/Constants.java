@@ -52,7 +52,7 @@ public class Constants {
 	public static final String base_path = "/tmp/evansl/crawlData/";
 	
 	// Crawl depth
-	public static final int Crawl_Depth = 4;
+	public static final int Crawl_Depth = 5;
 	
 	// Default Thread pool size
 	public static final int Threads = 3;

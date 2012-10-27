@@ -1,5 +1,7 @@
 package cs555.crawler.node;
 
+import cs555.crawler.pool.FetchParseTask;
+import cs555.crawler.pool.ThreadPoolManager;
 import cs555.crawler.url.CrawlerState;
 import cs555.crawler.url.Page;
 import cs555.crawler.utilities.Constants;
@@ -13,6 +15,7 @@ public class Crawler {
 	PeerNode peer;
 	int depth;
 	CrawlerState crawlState;
+	ThreadPoolManager poolManager;
 
 	//================================================================================
 	// Init
@@ -25,6 +28,8 @@ public class Crawler {
 	public void init(String d, int p){
 		peer.initServer();
 		peer.enterDHT(d, p);
+		poolManager = new ThreadPoolManager(Constants.Threads);
+		poolManager.start();
 	}
 
 
@@ -49,6 +54,8 @@ public class Crawler {
 	// Domain we own
 	public synchronized void incomingDomainRequest(DomainRequest request) {
 		System.out.println("Received domain request : " + request.domain);
+		FetchParseTask fetcher = new FetchParseTask(request.url);
+		poolManager.execute(fetcher);
 	}
 	
 	// URL response

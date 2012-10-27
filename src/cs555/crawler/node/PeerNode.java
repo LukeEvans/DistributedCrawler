@@ -439,6 +439,8 @@ public class PeerNode extends Node{
 			System.out.println("Unrecognized Message : " + messageType);
 			break;
 		}
+		
+		l.close();
 	}
 
 
