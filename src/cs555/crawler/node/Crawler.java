@@ -3,6 +3,7 @@ package cs555.crawler.node;
 import cs555.crawler.pool.FetchParseTask;
 import cs555.crawler.pool.ThreadPoolManager;
 import cs555.crawler.url.CrawlerState;
+import cs555.crawler.url.Page;
 import cs555.crawler.utilities.Constants;
 import cs555.crawler.utilities.Tools;
 import cs555.crawler.wireformatsURL.DomainRequest;
@@ -31,13 +32,20 @@ public class Crawler {
 		poolManager.start();
 	}
 
-
-
 	//================================================================================
 	// Publish
 	//================================================================================
 	public void publishLink(URLRequest req) {
-		
+		synchronized (crawlState) {
+			Page page = new Page(req.url, req.depth, req.domain);
+			
+			// If we have not seen page yet, add it to our state as ready
+			if (crawlState.addPage(page)) {
+				peer.publishLink(req);
+				crawlState.markUrlPending(page);
+			}	
+			
+		}
 	}
 
 	//================================================================================
@@ -46,21 +54,36 @@ public class Crawler {
 	// Link to parse
 	public synchronized void incomingUrlRequest(URLRequest request) {
 		// fetch url
-		System.out.println("Fetching : " + request.url);
+		System.out.println("Fetching : " + request.url + " : " + Tools.generateHash(request.url));
+		boolean leader = false;
+		FetchParseTask fetcher = new FetchParseTask(request, this, leader);
+		poolManager.execute(fetcher);
 		
 	}
 
 	// Domain we own
 	public synchronized void incomingDomainRequest(DomainRequest request) {
+		crawlState = new CrawlerState();
 		System.out.println("Received domain request : " + request.domain);
-		FetchParseTask fetcher = new FetchParseTask(request);
+		
+		// Make ourselves the intermediary for any further requests on this domain
+		request.addIntermediary(peer.hostname, peer.port);
+		boolean leader = true;
+		
+		// Send it off to be fetched and processed
+		FetchParseTask fetcher = new FetchParseTask(request, this, leader);
 		poolManager.execute(fetcher);
 	}
 	
 	
 	// URL response
-	public synchronized void incomingUrlResponse(URLResponse response) {
+	public void incomingUrlResponse(URLResponse response) {
+		synchronized (crawlState) {
+			// mark the response page as complete
 		
+			// Accumulate info from the response
+			
+		}
 	}
 	
 

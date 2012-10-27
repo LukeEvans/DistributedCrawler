@@ -174,6 +174,19 @@ public class URLRequest{
 	}
 	
 	//================================================================================
+	// URLRequest modifiers
+	//================================================================================
+	public URLRequest getNextLevelRequest(String u) {
+		int newHash = Tools.generateHash(u);
+		return new URLRequest(requesterHostName, requesterPort, intermediaryHostName, intermediaryPort, id, newHash, domain, u, depth + 1);
+	}
+	
+	public void addIntermediary(String host, int port) {
+		intermediaryHostName = host;
+		intermediaryPort = port;
+	}
+	
+	//================================================================================
 	// House Keeping
 	//================================================================================
 	// Override the toString method

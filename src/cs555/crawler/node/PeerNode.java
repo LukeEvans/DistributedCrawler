@@ -204,8 +204,22 @@ public class PeerNode extends Node{
 	}
 
 	// Publish link into system
-	public void publishLink(String domain, String url, int depth) {
-
+	public void publishLink(URLRequest req) {
+		
+		// If the item belongs to us, pass it back to the crawler to fetch
+		if (state.itemIsMine(req.resolveID)) {
+			crawelr.incomingUrlRequest(req);
+		}
+		
+		// Else, pass it along
+		else {
+			Peer peer = state.getNexClosestPeer(req.resolveID);
+			Link link = connect(peer);
+			
+			req.hopCount++;
+			System.out.println("Sending request to: " + peer.id);
+			link.sendData(req.marshall());
+		}
 	}
 
 	//================================================================================

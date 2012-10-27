@@ -5,13 +5,12 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Stack;
 
 import cs555.crawler.utilities.*;
 
 public class CrawlerState {
 
-	Stack<Page> readyStack;
+	ArrayList<Page> readyList;
 	ArrayList<Page> pendingList;
 	ArrayList<Page> doneList;
 	
@@ -24,7 +23,7 @@ public class CrawlerState {
 	public CrawlerState(String lf, int depth){
 		linkFile = lf;
 		
-		readyStack = new Stack<Page>();
+		readyList = new ArrayList<Page>();
 		pendingList = new ArrayList<Page>();
 		doneList = new ArrayList<Page>();
 		maxDepth = depth;
@@ -33,7 +32,7 @@ public class CrawlerState {
 	}
 	
 	public CrawlerState() {
-		readyStack = new Stack<Page>();
+		readyList = new ArrayList<Page>();
 		pendingList = new ArrayList<Page>();
 		doneList = new ArrayList<Page>();
 		maxDepth = Constants.Crawl_Depth;	
@@ -73,8 +72,8 @@ public class CrawlerState {
 	// Get next ready URL
 	public Page getNextReadyPage(){
 		
-		if (!readyStack.isEmpty()){
-			Page url = readyStack.pop();
+		if (!readyList.isEmpty()){
+			Page url = readyList.get(0);
 			url.status = Constants.URL_Pending;
 			pendingList.add(url);
 			
@@ -86,7 +85,7 @@ public class CrawlerState {
 	
 	// Get all ready links
 	public ArrayList<Page> getAllReadyLinks() {
-		return getNextReadySet(readyStack.size());
+		return getNextReadySet(readyList.size());
 	}
 	
 	// Get multiple pages
@@ -104,13 +103,26 @@ public class CrawlerState {
 	// List manipulation 
 	//================================================================================
 	// Add peer
-	public void addPage(Page u){
+	public boolean addPage(Page u){
 		if (!contains(u)){
 			if (u.depth < maxDepth){
-				readyStack.add(u);
+				readyList.add(u);
+				return true;
 			}
 			
 		}
+		
+		return false;
+	}
+	
+	public Page findReadyUrl(Page u) {
+		for (Page url : readyList) {
+			if (url.equals(u)){
+				return url;
+			}
+		}
+		
+		return null;
 	}
 	
 	public Page findPendingUrl(Page u){
@@ -134,7 +146,16 @@ public class CrawlerState {
 		}
 	}
 	
-	
+	// Mark pending
+	public void markUrlPending(Page u) {
+		Page url = findReadyUrl(u);
+		
+		if (url != null) {
+			url.status = Constants.URL_Pending;
+			readyList.remove(url);
+			pendingList.add(url);
+		}
+	}
 	
 	//================================================================================
 	// Completion methods 
@@ -144,7 +165,7 @@ public class CrawlerState {
 	}
 	
 	public boolean readyLinksRemaining(){
-		return !readyStack.isEmpty();
+		return !readyList.isEmpty();
 	}
 	
 	//================================================================================
@@ -153,7 +174,7 @@ public class CrawlerState {
 	// Override .contains method
 	public boolean contains(Page url) {
 
-		for (Page u : readyStack){
+		for (Page u : readyList){
 			if (url.equals(u)){
 				return true;
 			}
@@ -179,7 +200,7 @@ public class CrawlerState {
 		String s = "";
 
 		s += "\nReady:\n";
-		for (Page u : readyStack){
+		for (Page u : readyList){
 			s += u.toString() + "\n";
 		}
 		
