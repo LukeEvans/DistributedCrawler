@@ -13,10 +13,13 @@ public class URLRequest{
 	
 	public int hopCount; // 4
 	
-	public int hostLength; // 4 
-	public String hostName; // hostLength
+	public int requesterHostLength; // 4 
+	public String requesterHostName; // requesterHostLength
+	public int requesterPort; // 4
 	
-	public int port; // 4
+	public int intermediaryHostLength; // 4
+	public String intermediaryHostName; // intermediaryHostLength
+	public int intermediaryPort; // 4
 	
 	public int id; // 4
 	
@@ -28,25 +31,30 @@ public class URLRequest{
 	public int urlLen; // 4
 	public String url; // urlLen
 	
+	public int depth; // 4;
+	
 	//================================================================================
 	// Constructors
 	//================================================================================
-	public URLRequest(String h, int p, int i, int r, String d, String u){
-		init(h, p, i, r, d, u);
+	public URLRequest(String h, int p, String h2, int p2, int i, int r, String d, String u, int dep){
+		init(h, p, h2, p2, i, r, d, u, dep);
 	}
 	
 	public URLRequest(){
-		init("",0,-1,-1, "", "");
+		init("",0, "", 0, -1,-1, "", "", 0);
 	}
 	
-	public void init(String h, int p, int i, int r, String d, String u){
+	public void init(String h, int p, String h2, int p2, int i, int r, String d, String u, int dep){
 		type = Constants.URL_Request;
 		hopCount = 0;
 		
-		hostLength = h.length();
-		hostName = h;
+		requesterHostLength = h.length();
+		requesterHostName = h;
+		requesterPort = p;
 		
-		port = p;
+		intermediaryHostLength = h2.length();
+		intermediaryHostName = h2;
+		intermediaryPort = p2;
 		
 		id = i;
 		
@@ -57,7 +65,9 @@ public class URLRequest{
 		domain = d;
 		url = u;
 		
-		size = 4 + 4 + 4 + hostLength + 4 + 4 + 4 + 4 + 4 + domainLen + 4 + urlLen;
+		depth = dep;
+		
+		size = 4 + 4 + 4 + requesterHostLength + 4 + 4 + 4 + 4 + 4 + domainLen + 4 + urlLen + 4 + 4 + intermediaryHostLength + 4;
 	}
 	
 	
@@ -77,12 +87,15 @@ public class URLRequest{
 		// Hop count 
 		bbuff.putInt(hopCount);
 		
-		// Host length and hostname
-		bbuff.putInt(hostLength);
-		bbuff.put(Tools.convertToBytes(hostName));
+		// Requester host length and hostname
+		bbuff.putInt(requesterHostLength);
+		bbuff.put(Tools.convertToBytes(requesterHostName));
+		bbuff.putInt(requesterPort);
 		
-		// Port 
-		bbuff.putInt(port);
+		// Intermediary host length and hostname
+		bbuff.putInt(intermediaryHostLength);
+		bbuff.put(Tools.convertToBytes(intermediaryHostName));
+		bbuff.putInt(intermediaryPort);
 		
 		// ID
 		bbuff.putInt(id);
@@ -97,6 +110,9 @@ public class URLRequest{
 		// URL
 		bbuff.putInt(urlLen);
 		bbuff.put(Tools.convertToBytes(url));
+		
+		// depth
+		bbuff.putInt(depth);
 		
 		return bytes;
 	}
@@ -117,14 +133,23 @@ public class URLRequest{
 		// Hopcount 
 		hopCount = bbuff.getInt();
 		
+		// Requester
 		// Host length and hostname
-		hostLength = bbuff.getInt();
-		byte[] hostBytes = new byte[hostLength];
+		requesterHostLength = bbuff.getInt();
+		byte[] hostBytes = new byte[requesterHostLength];
 		bbuff.get(hostBytes);
-		hostName = new String(hostBytes,0,hostLength);
-		
+		requesterHostName = new String(hostBytes,0,requesterHostLength);
 		// Port
-		port = bbuff.getInt();
+		requesterPort = bbuff.getInt();
+		
+		// Intermediary
+		// host length and hostname
+		intermediaryHostLength = bbuff.getInt();
+		byte[] intHostBytes = new byte[intermediaryHostLength];
+		bbuff.get(intHostBytes);
+		intermediaryHostName = new String(intHostBytes,0,intermediaryHostLength);
+		// Port
+		intermediaryPort = bbuff.getInt();
 		
 		// ID
 		id = bbuff.getInt();
@@ -144,6 +169,8 @@ public class URLRequest{
 		bbuff.get(urlBytes);
 		url = new String(urlBytes,0,urlLen);
 		
+		// depth
+		depth = bbuff.getInt();
 	}
 	
 	//================================================================================
@@ -160,8 +187,8 @@ public class URLRequest{
 	
 	// Override the equals method
 	public boolean equals(URLRequest other) {
-		if (this.hostName.equalsIgnoreCase(other.hostName)){
-			if (this.port == other.port) {
+		if (this.requesterHostName.equalsIgnoreCase(other.requesterHostName)){
+			if (this.requesterPort == other.requesterPort) {
 				if (this.resolveID == other.resolveID) {
 					return true;
 				}

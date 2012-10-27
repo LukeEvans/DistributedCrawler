@@ -3,7 +3,6 @@ package cs555.crawler.node;
 import cs555.crawler.pool.FetchParseTask;
 import cs555.crawler.pool.ThreadPoolManager;
 import cs555.crawler.url.CrawlerState;
-import cs555.crawler.url.Page;
 import cs555.crawler.utilities.Constants;
 import cs555.crawler.utilities.Tools;
 import cs555.crawler.wireformatsURL.DomainRequest;
@@ -37,8 +36,8 @@ public class Crawler {
 	//================================================================================
 	// Publish
 	//================================================================================
-	public void publishLink(Page page) {
-		peer.publishLink(page.domain, page.urlString, page.depth);
+	public void publishLink(URLRequest req) {
+		
 	}
 
 	//================================================================================
@@ -54,9 +53,10 @@ public class Crawler {
 	// Domain we own
 	public synchronized void incomingDomainRequest(DomainRequest request) {
 		System.out.println("Received domain request : " + request.domain);
-		FetchParseTask fetcher = new FetchParseTask(request.url);
+		FetchParseTask fetcher = new FetchParseTask(request);
 		poolManager.execute(fetcher);
 	}
+	
 	
 	// URL response
 	public synchronized void incomingUrlResponse(URLResponse response) {

@@ -19,7 +19,7 @@ public class CrawlerState {
 	int maxDepth;
 	
 	//================================================================================
-	// Constructor
+	// Constructors
 	//================================================================================
 	public CrawlerState(String lf, int depth){
 		linkFile = lf;
@@ -30,6 +30,13 @@ public class CrawlerState {
 		maxDepth = depth;
 		
 		buildState();
+	}
+	
+	public CrawlerState() {
+		readyStack = new Stack<Page>();
+		pendingList = new ArrayList<Page>();
+		doneList = new ArrayList<Page>();
+		maxDepth = Constants.Crawl_Depth;	
 	}
 	
 	public void buildState(){

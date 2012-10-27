@@ -55,10 +55,6 @@ public class Page {
 		return new DomainRequest(host, port, Constants.Seed_Node, urlHash, domain, urlString);
 	}
 	
-	public URLRequest getUrlRequest(String host, int port, int id) {
-		return new URLRequest(host, port, id, urlHash, domain, urlString);
-	}
-	
 	//================================================================================
 	// House Keeping
 	//================================================================================

@@ -205,21 +205,7 @@ public class PeerNode extends Node{
 
 	// Publish link into system
 	public void publishLink(String domain, String url, int depth) {
-		int urlHash = Tools.generateHash(url);
-		URLRequest req = new URLRequest(hostname, port, id, urlHash, domain, url);
 
-		// If we're already at the node, send it back to the crawler to crawl
-		if (state.itemIsMine(urlHash)) {
-			crawelr.incomingUrlRequest(req);
-		}
-
-		// Else, actually put it into the DHT
-		else {
-			Peer peer = state.getNexClosestPeer(urlHash);
-			Link peerLink = connect(peer);
-
-			peerLink.sendData(req.marshall());
-		}
 	}
 
 	//================================================================================
