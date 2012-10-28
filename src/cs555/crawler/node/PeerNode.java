@@ -12,6 +12,7 @@ import cs555.crawler.utilities.*;
 import cs555.crawler.wireformats.*;
 import cs555.crawler.wireformatsURL.DomainRequest;
 import cs555.crawler.wireformatsURL.URLRequest;
+import cs555.crawler.wireformatsURL.URLResponse;
 
 public class PeerNode extends Node{
 
@@ -203,6 +204,11 @@ public class PeerNode extends Node{
 		sucessorLink.sendData(r.marshall());
 	}
 
+	public void sendResponse(Peer p, URLResponse response) {
+		Link link = connect(p);
+		link.sendData(response.marshall());
+	}
+	
 	// Publish link into system
 	public void publishLink(URLRequest req) {
 		
