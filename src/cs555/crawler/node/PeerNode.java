@@ -214,7 +214,14 @@ public class PeerNode extends Node{
 		
 		// If the item belongs to us, pass it back to the crawler to fetch
 		if (state.itemIsMine(req.resolveID)) {
-			crawelr.incomingUrlRequest(req);
+			
+			if (req.type == Constants.URL_Request) {
+				crawelr.incomingUrlRequest(req);
+			}
+			
+			else if (req.type == Constants.Handoff_Request) {
+				crawelr.incomingHandoff(req);
+			}
 		}
 		
 		// Else, pass it along
@@ -226,6 +233,11 @@ public class PeerNode extends Node{
 			System.out.println("Sending request to: " + peer.id);
 			link.sendData(req.marshall());
 		}
+	}
+	
+	// Publish handoff
+	public void publishHandoff(URLRequest req) {
+		publishLink(req);
 	}
 
 	//================================================================================

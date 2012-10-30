@@ -28,6 +28,7 @@ public class Constants {
 	public static final int DHT_Scan = 22;
 	public static final int Seed_Node = 23;
 	public static final int Domain_Response = 24;
+	public static final int Handoff_Request = 25;
 	
 	// Flags
 	public static final int Undefined = -1;

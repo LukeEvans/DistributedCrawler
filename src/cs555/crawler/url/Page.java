@@ -12,18 +12,21 @@ public class Page {
 	public int depth;
 	public String domain;
 	public int urlHash;
+	public int domainHash;
 	ArrayList<Page> links;
 	
 	//================================================================================
 	// Constructor
 	//================================================================================
-	public Page(String url){
-		urlString = url;
+	public Page(String url, String d){
+		urlString = d;
 		domain = urlString;
 		status = Constants.URL_Ready;
 		depth = 0;
 		links = new ArrayList<Page>();
 		urlHash = Tools.generateHash(urlString);
+		domainHash = Tools.generateHash(domain);
+		
 	}
 	
 	public Page(String url, int dep, String d){
@@ -33,6 +36,7 @@ public class Page {
 		depth = dep;
 		links = new ArrayList<Page>();
 		urlHash = Tools.generateHash(urlString);
+		domainHash = Tools.generateHash(domain);
 	}
 	
 	//================================================================================
@@ -52,7 +56,7 @@ public class Page {
 	// Get requests for page
 	//================================================================================
 	public DomainRequest getDomainRequest(String host, int port) {
-		return new DomainRequest(host, port, Constants.Seed_Node, urlHash, domain, urlString);
+		return new DomainRequest(host, port, Constants.Seed_Node, domainHash, domain, urlString);
 	}
 	
 	//================================================================================

@@ -1,8 +1,5 @@
 package cs555.crawler.node;
 
-import java.net.URL;
-import java.util.ArrayList;
-
 import cs555.crawler.peer.Peer;
 import cs555.crawler.pool.FetchParseTask;
 import cs555.crawler.pool.ThreadPoolManager;
@@ -27,6 +24,7 @@ public class Crawler {
 	public Crawler(int d, int p, int i, int r) {
 		depth = d;
 		peer = new PeerNode(p, i, r, this);
+		crawlState = new CrawlerState();
 	}
 
 	public void init(String d, int p){
@@ -52,64 +50,85 @@ public class Crawler {
 		}
 	}
 
-	public void handlePage(URLRequest request, URL[] links, boolean domainLeader) {
+	public void handlePage(URLResponse response, boolean domainLeader) {
 
-		ArrayList<URL> domainSpecific = new ArrayList<URL>();
-
-		// For the full list of urls, determine which we care about
-		for (URL link : links) {
-			// If the link belongs to the domain, add it
-			if (link.toString().startsWith(request.domain)) {
-				domainSpecific.add(link);
-			}
-		}
 		
-		// If we're the domain leader, publish new links into the system
-		if (domainLeader) {
-			for (URL link : domainSpecific) {
-				URLRequest req = request.getNextLevelRequest(link.toString());
-				publishLink(req);
-			}
-			
-			// Add important stuff to collection
-		}
-
-		// Else, forward the response back to the intermediary
-		else {
-			Peer intermediary = new Peer(request.intermediaryHostName, request.intermediaryPort);
-			URLResponse response = new URLResponse();
+		// If we're not in charge of this domain, send back to intermediary
+		if (!domainLeader) {
+			Peer intermediary = new Peer(response.intermediaryHostName, response.intermediaryPort);
 			peer.sendResponse(intermediary, response);
 		}
+		
+		// If we are, handle it
+		else {
+			// Accumulate data
+			
+			
+			// for each link, if it belongs to our domain, continue processesing or hand it off to another leader
+			for (String s : response.links) {
+				
+				URLRequest req = response.getNextLevelRequest(s);
+				
+				if (s.contains("." + response.domain)) {
+					publishLink(req);
+				}
+				
+				// hand it off to someone else
+				else {
+					req.type = Constants.Handoff_Request;
+					peer.publishHandoff(req);
+				}
+			}
+		}
+
 	}
 
 	//================================================================================
 	// Incoming Requests
 	//================================================================================
+
+	// Handoff
+	public void incomingHandoff(URLRequest handoff) {
+		synchronized (crawlState) {
+			System.out.println("Received handoff request for domain : " + handoff.domain);
+			
+			// If we're tracking this domain, handle the link
+			if (crawlState.isTracking(handoff.domain)) {
+				crawlState.addPage(new Page(handoff.url, handoff.depth, handoff.domain));
+				
+				handoff.addIntermediary(peer.hostname, peer.port);
+				boolean leader = true;
+				FetchParseTask fetcher = new FetchParseTask(handoff, this, leader);
+				poolManager.execute(fetcher);
+			}
+		}
+	}
+
 	// Link to parse
-	public synchronized void incomingUrlRequest(URLRequest request) {
+	public void incomingUrlRequest(URLRequest request) {
+
 		// fetch url
 		System.out.println("Fetching : " + request.url + " : " + Tools.generateHash(request.url));
 		boolean leader = false;
 		FetchParseTask fetcher = new FetchParseTask(request, this, leader);
-		poolManager.execute(fetcher);
+		poolManager.execute(fetcher);	
 
 	}
 
 	// Domain we own
-	public synchronized void incomingDomainRequest(DomainRequest request) {
-		if (crawlState == null) {
-			crawlState = new CrawlerState();
+	public void incomingDomainRequest(DomainRequest request) {
+		synchronized (crawlState) {
+			System.out.println("Received domain request : " + request.domain);
+			crawlState.addDomain(request.domain);
+
+			// Make ourselves the intermediary for any further requests on this domain
+			request.addIntermediary(peer.hostname, peer.port);
+			boolean leader = true;
+
+			// Send it off to be fetched and processed
+			FetchParseTask fetcher = new FetchParseTask(request, this, leader);
+			poolManager.execute(fetcher);	
 		}
-
-		System.out.println("Received domain request : " + request.domain);
-
-		// Make ourselves the intermediary for any further requests on this domain
-		request.addIntermediary(peer.hostname, peer.port);
-		boolean leader = true;
-
-		// Send it off to be fetched and processed
-		FetchParseTask fetcher = new FetchParseTask(request, this, leader);
-		poolManager.execute(fetcher);
 	}
 
 
@@ -122,7 +141,6 @@ public class Crawler {
 
 		}
 	}
-
 
 
 
