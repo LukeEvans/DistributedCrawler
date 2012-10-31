@@ -1,7 +1,5 @@
 package cs555.crawler.url;
 
-import java.util.ArrayList;
-
 import cs555.crawler.wireformatsURL.*;
 import cs555.crawler.utilities.*;
 
@@ -13,7 +11,7 @@ public class Page {
 	public String domain;
 	public int urlHash;
 	public int domainHash;
-	ArrayList<Page> links;
+	PageMetadata metadata;
 	
 	//================================================================================
 	// Constructor
@@ -23,9 +21,9 @@ public class Page {
 		domain = urlString;
 		status = Constants.URL_Ready;
 		depth = 0;
-		links = new ArrayList<Page>();
 		urlHash = Tools.generateHash(urlString);
 		domainHash = Tools.generateHash(domain);
+		metadata = new PageMetadata();
 		
 	}
 	
@@ -34,22 +32,17 @@ public class Page {
 		domain = d;
 		status = Constants.URL_Ready;
 		depth = dep;
-		links = new ArrayList<Page>();
 		urlHash = Tools.generateHash(urlString);
 		domainHash = Tools.generateHash(domain);
+		metadata = new PageMetadata();
 	}
 	
+
 	//================================================================================
 	// Modifiers
 	//================================================================================
-	public ArrayList<String> stringLinks(){
-		ArrayList<String> stringLinks = new ArrayList<String>();
-		
-		for (Page p : links){
-			stringLinks.add(p.urlString);
-		}
-		
-		return stringLinks;
+	public void parseResponse(URLResponse resp) {
+		metadata.parseResponse(resp);
 	}
 	
 	//================================================================================

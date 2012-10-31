@@ -52,31 +52,36 @@ public class Crawler {
 
 	public void handlePage(URLResponse response, boolean domainLeader) {
 
-		
-		// If we're not in charge of this domain, send back to intermediary
-		if (!domainLeader) {
-			Peer intermediary = new Peer(response.intermediaryHostName, response.intermediaryPort);
-			peer.sendResponse(intermediary, response);
-		}
-		
-		// If we are, handle it
-		else {
-			// Accumulate data
-			
-			
-			// for each link, if it belongs to our domain, continue processesing or hand it off to another leader
-			for (String s : response.links) {
+		synchronized (crawlState) {
+			// If we're not in charge of this domain, send back to intermediary
+			if (!domainLeader) {
+				Peer intermediary = new Peer(response.intermediaryHostName, response.intermediaryPort);
+				peer.sendResponse(intermediary, response);
+			}
+
+			// If we are, handle it
+			else {
+				// mark the response page as complete
+				Page page = new Page(response.url, response.depth, response.domain);
+				crawlState.markUrlPending(page);
 				
-				URLRequest req = response.getNextLevelRequest(s);
-				
-				if (s.contains("." + response.domain)) {
-					publishLink(req);
-				}
-				
-				// hand it off to someone else
-				else {
-					req.type = Constants.Handoff_Request;
-					peer.publishHandoff(req);
+				// Accumulate data
+
+
+				// for each link, if it belongs to our domain, continue processesing or hand it off to another leader
+				for (String s : response.links) {
+
+					URLRequest req = response.getNextLevelRequest(s);
+
+					if (s.contains("." + response.domain)) {
+						publishLink(req);
+					}
+
+					// hand it off to someone else
+					else {
+						req.type = Constants.Handoff_Request;
+						peer.publishHandoff(req);
+					}
 				}
 			}
 		}
@@ -91,11 +96,11 @@ public class Crawler {
 	public void incomingHandoff(URLRequest handoff) {
 		synchronized (crawlState) {
 			System.out.println("Received handoff request for domain : " + handoff.domain);
-			
+
 			// If we're tracking this domain, handle the link
 			if (crawlState.isTracking(handoff.domain)) {
 				crawlState.addPage(new Page(handoff.url, handoff.depth, handoff.domain));
-				
+
 				handoff.addIntermediary(peer.hostname, peer.port);
 				boolean leader = true;
 				FetchParseTask fetcher = new FetchParseTask(handoff, this, leader);
@@ -134,11 +139,14 @@ public class Crawler {
 
 	// URL response
 	public void incomingUrlResponse(URLResponse response) {
-		synchronized (crawlState) {
-			// mark the response page as complete
-
-			// Accumulate info from the response
-
+		
+		if (crawlState.linkIsMine(response.domain)) {
+			boolean domainLeader = true;
+			handlePage(response, domainLeader);
+		}
+		
+		else {
+			System.out.println("Recieved a URL Response for a domain that is not mine: " + response.domain);
 		}
 	}
 

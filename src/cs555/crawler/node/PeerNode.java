@@ -11,6 +11,7 @@ import cs555.crawler.state.State;
 import cs555.crawler.utilities.*;
 import cs555.crawler.wireformats.*;
 import cs555.crawler.wireformatsURL.DomainRequest;
+import cs555.crawler.wireformatsURL.HandoffRequest;
 import cs555.crawler.wireformatsURL.URLRequest;
 import cs555.crawler.wireformatsURL.URLResponse;
 
@@ -237,6 +238,7 @@ public class PeerNode extends Node{
 	
 	// Publish handoff
 	public void publishHandoff(URLRequest req) {
+		System.out.println("Handing off : " + req.domain + " : " + req.url);
 		publishLink(req);
 	}
 
@@ -452,6 +454,33 @@ public class PeerNode extends Node{
 
 			break;
 			
+		case Constants.URL_Response:
+			URLResponse urlResp = new URLResponse();
+			urlResp.unmarshall(bytes);
+			crawelr.incomingUrlResponse(urlResp);
+			
+			break;
+			
+		case Constants.Handoff_Request:
+			
+			HandoffRequest handoff = new HandoffRequest();
+			handoff.unmarshall(bytes);
+			int domainHash = Tools.generateHash(handoff.domain);
+			
+			// If we own this domain, pass it to the crawler
+			if (state.itemIsMine(domainHash)) {
+				crawelr.incomingHandoff(handoff);
+			}
+			
+			// Else, pass it
+			else {
+				Peer peer = state.getNexClosestPeer(domainHash);
+				Link peerLink = connect(peer);
+
+				peerLink.sendData(handoff.marshall());
+			}
+			
+			break;
 			
 		default:
 			System.out.println("Unrecognized Message : " + messageType);

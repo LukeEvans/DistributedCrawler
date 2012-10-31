@@ -130,8 +130,25 @@ public class CrawlerState {
 		return false;
 	}
 	
+	public boolean linkIsMine(String url) {
+		for (Page  p : trackingDomains) {
+			if (url.contains("." + p.domain)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	// Tally the data
 	public void accumulateData(URLResponse response) {
 		
+		for (Page p : trackingDomains) {
+			if (response.domain.equalsIgnoreCase(p.domain)) {
+				p.parseResponse(response);
+				return;
+			}
+		}
 	}
 	
 	//================================================================================
