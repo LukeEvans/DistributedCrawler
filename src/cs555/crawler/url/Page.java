@@ -1,6 +1,7 @@
 package cs555.crawler.url;
 
 import cs555.crawler.wireformatsURL.*;
+import cs555.crawler.peer.Peer;
 import cs555.crawler.utilities.*;
 
 public class Page {
@@ -12,6 +13,8 @@ public class Page {
 	public int urlHash;
 	public int domainHash;
 	PageMetadata metadata;
+	
+	public Peer requester;
 	
 	//================================================================================
 	// Constructor
@@ -37,7 +40,6 @@ public class Page {
 		metadata = new PageMetadata();
 	}
 	
-
 	//================================================================================
 	// Modifiers
 	//================================================================================
@@ -45,6 +47,9 @@ public class Page {
 		metadata.parseResponse(resp);
 	}
 	
+	public void addRequester(String host, int p) {
+		requester = new Peer(host, p);
+	}
 	//================================================================================
 	// Get requests for page
 	//================================================================================

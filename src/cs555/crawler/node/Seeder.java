@@ -72,8 +72,12 @@ public class Seeder extends Node {
 		int messageType = Tools.getMessageType(bytes);
 
 		switch (messageType) {
-		case Constants.lookup_reply:
+		case Constants.Domain_Response:
+			// Unmarshall response
 			
+			// Mark this domain complete
+			
+			// Print domain info
 			
 			break;
 

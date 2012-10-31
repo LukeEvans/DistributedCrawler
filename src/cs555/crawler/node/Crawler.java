@@ -38,6 +38,12 @@ public class Crawler {
 	// Publish
 	//================================================================================
 	public void publishLink(URLRequest req) {
+		
+		// We've met our maximum depth. Don't continue
+		if (req.depth == depth) {
+			return;
+		}
+		
 		synchronized (crawlState) {
 			Page page = new Page(req.url, req.depth, req.domain);
 
@@ -66,7 +72,9 @@ public class Crawler {
 				crawlState.markUrlPending(page);
 				
 				// Accumulate data
-
+				crawlState.accumulateData(response);
+				
+				
 
 				// for each link, if it belongs to our domain, continue processesing or hand it off to another leader
 				for (String s : response.links) {
@@ -94,6 +102,12 @@ public class Crawler {
 
 	// Handoff
 	public void incomingHandoff(URLRequest handoff) {
+		
+		// We've met our depth
+		if (handoff.depth == depth) {
+			return;
+		}
+		
 		synchronized (crawlState) {
 			System.out.println("Received handoff request for domain : " + handoff.domain);
 
@@ -124,7 +138,7 @@ public class Crawler {
 	public void incomingDomainRequest(DomainRequest request) {
 		synchronized (crawlState) {
 			System.out.println("Received domain request : " + request.domain);
-			crawlState.addDomain(request.domain);
+			crawlState.addDomain(request.domain, request.requesterHostName, request.requesterPort);
 
 			// Make ourselves the intermediary for any further requests on this domain
 			request.addIntermediary(peer.hostname, peer.port);
@@ -143,6 +157,11 @@ public class Crawler {
 		if (crawlState.linkIsMine(response.domain)) {
 			boolean domainLeader = true;
 			handlePage(response, domainLeader);
+			
+			// If we're done
+			if (!crawlState.shouldContinue()) {
+				System.out.println("Completed crawl. Send back to requester");
+			}
 		}
 		
 		else {

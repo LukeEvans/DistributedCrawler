@@ -112,10 +112,11 @@ public class CrawlerState {
 	// Domain Tracking
 	//================================================================================
 	// Add domain we're tracking
-	public void addDomain(String d) {
+	public void addDomain(String d, String host, int port) {
 
 		if (!isTracking(d)) {
 			Page domain = new Page(d, d);
+			domain.addRequester(host, port);
 			trackingDomains.add(domain);
 		}
 	}
