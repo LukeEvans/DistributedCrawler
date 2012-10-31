@@ -70,7 +70,10 @@ public class CrawlerState {
 		String url = lineParts[0];
 		String domain = lineParts[1];
 
-		Page p = new Page(url, domain);
+		System.out.println("url : " + url);
+		System.out.println("domain : " + domain);
+		
+		Page p = new Page(url, 0, domain);
 		addPage(p);
 	}
 
@@ -160,6 +163,7 @@ public class CrawlerState {
 		if (!contains(u)){
 			if (u.depth < maxDepth){
 				readyList.add(u);
+				
 				return true;
 			}
 

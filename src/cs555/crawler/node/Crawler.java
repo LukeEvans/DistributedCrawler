@@ -103,6 +103,7 @@ public class Crawler {
 	// Handoff
 	public void incomingHandoff(URLRequest handoff) {
 		
+		
 		// We've met our depth
 		if (handoff.depth == depth) {
 			return;
@@ -126,6 +127,10 @@ public class Crawler {
 	// Link to parse
 	public void incomingUrlRequest(URLRequest request) {
 
+		if (request.depth > depth) {
+			System.out.println("uh oh! Depth is going too far: " + request.depth);
+		}
+		
 		// fetch url
 		System.out.println("Fetching : " + request.url + " : " + Tools.generateHash(request.url));
 		boolean leader = false;
@@ -137,7 +142,7 @@ public class Crawler {
 	// Domain we own
 	public void incomingDomainRequest(DomainRequest request) {
 		synchronized (crawlState) {
-			System.out.println("Received domain request : " + request.domain);
+			System.out.println("Received domain request : " + request.url);
 			crawlState.addDomain(request.domain, request.requesterHostName, request.requesterPort);
 
 			// Make ourselves the intermediary for any further requests on this domain

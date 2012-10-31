@@ -53,6 +53,7 @@ public class Seeder extends Node {
 			for (Page p : crawlState.getAllReadyLinks()) {
 				DomainRequest domainReq = p.getDomainRequest(hostName, port);
 				System.out.println("Link resolves to : " + domainReq.resolveID);
+				System.out.println("url : " + domainReq.url);
 				
 				accessLink.sendData(domainReq.marshall());
 			}

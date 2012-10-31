@@ -408,6 +408,9 @@ public class PeerNode extends Node{
 			break;
 			
 		case Constants.URL_Request:
+			
+			System.out.println("got url request");
+			
 			URLRequest urlReq = new URLRequest();
 			urlReq.unmarshall(bytes);
 			
@@ -462,7 +465,7 @@ public class PeerNode extends Node{
 			break;
 			
 		case Constants.Handoff_Request:
-			
+					
 			HandoffRequest handoff = new HandoffRequest();
 			handoff.unmarshall(bytes);
 			int domainHash = Tools.generateHash(handoff.domain);

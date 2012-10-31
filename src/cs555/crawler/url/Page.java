@@ -20,8 +20,8 @@ public class Page {
 	// Constructor
 	//================================================================================
 	public Page(String url, String d){
-		urlString = d;
-		domain = urlString;
+		urlString = url;
+		domain = d;
 		status = Constants.URL_Ready;
 		depth = 0;
 		urlHash = Tools.generateHash(urlString);
